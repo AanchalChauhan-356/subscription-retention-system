@@ -30,7 +30,9 @@ Enable business users to analyze data through an interactive dashboard
 💡 3. Smart Recommendations
 
 Low → Maintain engagement
+
 Medium → Offer targeted promotions
+
 High → Immediate retention actions (discounts/support)
 
 📊 4. Interactive Dashboard
