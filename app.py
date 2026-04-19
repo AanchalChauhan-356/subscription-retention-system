@@ -18,7 +18,7 @@ st.set_page_config(page_title="Churn Intelligence", layout="wide")
 
 # Title
 st.title("🚀 Subscription Retention Intelligence System")
-st.markdown("Upload customer data and get churn insights + recommendations")
+st.markdown("Upload customer data and analyze churn with filters & insights")
 
 uploaded_file = st.file_uploader("📂 Upload CSV File", type=["csv"])
 
@@ -60,41 +60,77 @@ if uploaded_file is not None:
 
         def advice(r):
             if r == "Low":
-                return "✅ Maintain engagement (loyal customers)"
+                return "✅ Maintain engagement"
             elif r == "Medium":
-                return "⚠️ Offer targeted promotions"
+                return "⚠️ Offer promotions"
             else:
-                return "🚨 Immediate retention action (discounts / support)"
+                return "🚨 Immediate retention action"
 
         df['Recommendation'] = df['Risk_Level'].apply(advice)
 
-        # -------- KPI CARDS --------
+        # -------- FILTERS --------
+        st.sidebar.header("🔍 Filters")
+
+        # Risk filter
+        selected_risk = st.sidebar.multiselect(
+            "Select Risk Level",
+            options=["Low", "Medium", "High"],
+            default=["Low", "Medium", "High"]
+        )
+
+        # Probability filter
+        prob_range = st.sidebar.slider(
+            "Churn Probability Range",
+            0.0, 1.0, (0.0, 1.0)
+        )
+
+        # Charges filter (only if exists)
+        if 'MonthlyCharges' in df.columns:
+            charge_range = st.sidebar.slider(
+                "Monthly Charges Range",
+                float(df['MonthlyCharges'].min()),
+                float(df['MonthlyCharges'].max()),
+                (float(df['MonthlyCharges'].min()), float(df['MonthlyCharges'].max()))
+            )
+        else:
+            charge_range = None
+
+        # Apply filters
+        filtered_df = df[
+            (df['Risk_Level'].isin(selected_risk)) &
+            (df['Churn_Probability'] >= prob_range[0]) &
+            (df['Churn_Probability'] <= prob_range[1])
+        ]
+
+        if charge_range:
+            filtered_df = filtered_df[
+                (filtered_df['MonthlyCharges'] >= charge_range[0]) &
+                (filtered_df['MonthlyCharges'] <= charge_range[1])
+            ]
+
+        # -------- KPI --------
         st.subheader("📊 Key Insights")
 
         col1, col2, col3 = st.columns(3)
 
-        total = len(df)
-        high_risk = (df['Risk_Level'] == "High").sum()
-        avg_prob = df['Churn_Probability'].mean()
-
-        col1.metric("Total Customers", total)
-        col2.metric("High Risk Customers", high_risk)
-        col3.metric("Avg Churn Probability", f"{avg_prob:.2f}")
+        col1.metric("Filtered Customers", len(filtered_df))
+        col2.metric("High Risk", (filtered_df['Risk_Level'] == "High").sum())
+        col3.metric("Avg Probability", f"{filtered_df['Churn_Probability'].mean():.2f}")
 
         # -------- TABLE --------
-        st.subheader("📋 Prediction Results")
-        st.dataframe(df)
+        st.subheader("📋 Filtered Results")
+        st.dataframe(filtered_df)
 
-        # -------- HIGH RISK ALERT --------
+        # -------- HIGH RISK --------
         st.subheader("🚨 High Risk Customers")
 
-        high_df = df[df['Risk_Level'] == "High"]
+        high_df = filtered_df[filtered_df['Risk_Level'] == "High"]
 
         if len(high_df) > 0:
-            st.error(f"{len(high_df)} customers are at HIGH risk!")
+            st.error(f"{len(high_df)} high-risk customers found")
             st.dataframe(high_df.head(10))
         else:
-            st.success("No high-risk customers 🎉")
+            st.success("No high-risk customers")
 
         # -------- DASHBOARD --------
         st.subheader("📊 Visual Insights")
@@ -102,19 +138,19 @@ if uploaded_file is not None:
         col1, col2 = st.columns(2)
 
         with col1:
-            fig1 = px.pie(df, names='Risk_Level', hole=0.5,
+            fig1 = px.pie(filtered_df, names='Risk_Level', hole=0.5,
                           title="Risk Distribution")
             st.plotly_chart(fig1, use_container_width=True)
 
         with col2:
-            fig2 = px.histogram(df, x='Churn_Probability', nbins=30,
+            fig2 = px.histogram(filtered_df, x='Churn_Probability',
                                 title="Probability Distribution")
             st.plotly_chart(fig2, use_container_width=True)
 
         col3, col4 = st.columns(2)
 
         with col3:
-            risk_counts = df['Risk_Level'].value_counts().reset_index()
+            risk_counts = filtered_df['Risk_Level'].value_counts().reset_index()
             risk_counts.columns = ['Risk_Level', 'Count']
 
             fig3 = px.bar(risk_counts, x='Risk_Level', y='Count',
@@ -122,8 +158,8 @@ if uploaded_file is not None:
             st.plotly_chart(fig3, use_container_width=True)
 
         with col4:
-            if 'MonthlyCharges' in df.columns:
-                fig4 = px.scatter(df,
+            if 'MonthlyCharges' in filtered_df.columns:
+                fig4 = px.scatter(filtered_df,
                                   x='MonthlyCharges',
                                   y='Churn_Probability',
                                   color='Risk_Level',
@@ -131,8 +167,8 @@ if uploaded_file is not None:
                 st.plotly_chart(fig4, use_container_width=True)
 
         # -------- DOWNLOAD --------
-        csv = df.to_csv(index=False).encode('utf-8')
-        st.download_button("📥 Download Results", csv, "results.csv", "text/csv")
+        csv = filtered_df.to_csv(index=False).encode('utf-8')
+        st.download_button("📥 Download Filtered Results", csv, "filtered_results.csv", "text/csv")
 
     except Exception as e:
         st.error(f"Error: {e}")
