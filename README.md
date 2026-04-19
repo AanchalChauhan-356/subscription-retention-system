@@ -83,7 +83,6 @@ Model: Logistic Regression
 
 subscription-retention-system/
 
-│
 ├── app.py              # Main Streamlit application
 
 ├── model.pkl           # Trained ML model
