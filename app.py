@@ -2,10 +2,9 @@ import streamlit as st
 import pickle
 import numpy as np
 import pandas as pd
-
-# Load files
 import os
 
+# Load files
 model_path = os.path.join(os.path.dirname(__file__), "model.pkl")
 scaler_path = os.path.join(os.path.dirname(__file__), "scaler.pkl")
 columns_path = os.path.join(os.path.dirname(__file__), "columns.pkl")
@@ -28,10 +27,8 @@ for col in columns:
 # Convert to DataFrame
 input_df = pd.DataFrame([input_data])
 
-# Scale input
-input_scaled = scaler.transform(input_df)
-
 if st.button("Predict"):
+    input_scaled = scaler.transform(input_df)
     prob = model.predict_proba(input_scaled)[0][1]
 
     if prob < 0.3:
