@@ -136,8 +136,11 @@ Email/SMS automation for retention
  👨‍💻 Author
 
 Developed as part of a data science project to demonstrate end-to-end ML deployment with business insights.
+
 Name : Aanchal Chauhan 
+
 Course : BCA 4A AIML
+
 University : SGT University 
 
 ⭐ Conclusion
