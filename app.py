@@ -4,9 +4,15 @@ import numpy as np
 import pandas as pd
 
 # Load files
-model = pickle.load(open("model.pkl", "rb"))
-scaler = pickle.load(open("scaler.pkl", "rb"))
-columns = pickle.load(open("columns.pkl", "rb"))
+import os
+
+model_path = os.path.join(os.path.dirname(__file__), "model.pkl")
+scaler_path = os.path.join(os.path.dirname(__file__), "scaler.pkl")
+columns_path = os.path.join(os.path.dirname(__file__), "columns.pkl")
+
+model = pickle.load(open(model_path, "rb"))
+scaler = pickle.load(open(scaler_path, "rb"))
+columns = pickle.load(open(columns_path, "rb"))
 
 st.title("Subscription Retention Intelligence System")
 
