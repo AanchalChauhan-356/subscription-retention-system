@@ -18,7 +18,7 @@ st.set_page_config(page_title="Churn Intelligence", layout="wide")
 
 # Title
 st.title("🚀 Subscription Retention Intelligence System")
-st.markdown("Upload customer data and analyze churn with filters & insights")
+st.markdown("Upload customer data and analyze churn with smart insights")
 
 uploaded_file = st.file_uploader("📂 Upload CSV File", type=["csv"])
 
@@ -46,48 +46,58 @@ if uploaded_file is not None:
 
         # -------- PREDICT --------
         probs = model.predict_proba(scaled)[:, 1]
-        df['Churn_Probability'] = probs
 
+        # Convert to percentage
+        df['Churn_Probability'] = (probs * 100).round(2)
+
+        # Risk segmentation
         def risk(p):
-            if p < 0.3:
+            if p < 30:
                 return "Low"
-            elif p < 0.7:
+            elif p < 70:
                 return "Medium"
             else:
                 return "High"
 
         df['Risk_Level'] = df['Churn_Probability'].apply(risk)
 
+        # Recommendations
         def advice(r):
             if r == "Low":
                 return "✅ Maintain engagement"
             elif r == "Medium":
-                return "⚠️ Offer promotions"
+                return "⚠️ Offer targeted promotions"
             else:
                 return "🚨 Immediate retention action"
 
         df['Recommendation'] = df['Risk_Level'].apply(advice)
 
+        # -------- COLOR FUNCTION --------
+        def color_risk(val):
+            if val == "Low":
+                return "background-color: #d4edda; color: black"   # green
+            elif val == "Medium":
+                return "background-color: #fff3cd; color: black"   # yellow
+            else:
+                return "background-color: #f8d7da; color: black"   # red
+
         # -------- FILTERS --------
         st.sidebar.header("🔍 Filters")
 
-        # Risk filter
         selected_risk = st.sidebar.multiselect(
             "Select Risk Level",
-            options=["Low", "Medium", "High"],
+            ["Low", "Medium", "High"],
             default=["Low", "Medium", "High"]
         )
 
-        # Probability filter
         prob_range = st.sidebar.slider(
-            "Churn Probability Range",
-            0.0, 1.0, (0.0, 1.0)
+            "Churn Probability (%)",
+            0, 100, (0, 100)
         )
 
-        # Charges filter (only if exists)
         if 'MonthlyCharges' in df.columns:
             charge_range = st.sidebar.slider(
-                "Monthly Charges Range",
+                "Monthly Charges",
                 float(df['MonthlyCharges'].min()),
                 float(df['MonthlyCharges'].max()),
                 (float(df['MonthlyCharges'].min()), float(df['MonthlyCharges'].max()))
@@ -113,13 +123,16 @@ if uploaded_file is not None:
 
         col1, col2, col3 = st.columns(3)
 
-        col1.metric("Filtered Customers", len(filtered_df))
+        col1.metric("Customers", len(filtered_df))
         col2.metric("High Risk", (filtered_df['Risk_Level'] == "High").sum())
-        col3.metric("Avg Probability", f"{filtered_df['Churn_Probability'].mean():.2f}")
+        col3.metric("Avg Churn %", f"{filtered_df['Churn_Probability'].mean():.2f}%")
 
         # -------- TABLE --------
         st.subheader("📋 Filtered Results")
-        st.dataframe(filtered_df)
+
+        st.dataframe(
+            filtered_df.style.applymap(color_risk, subset=['Risk_Level'])
+        )
 
         # -------- HIGH RISK --------
         st.subheader("🚨 High Risk Customers")
@@ -127,10 +140,10 @@ if uploaded_file is not None:
         high_df = filtered_df[filtered_df['Risk_Level'] == "High"]
 
         if len(high_df) > 0:
-            st.error(f"{len(high_df)} high-risk customers found")
+            st.error(f"{len(high_df)} customers need immediate attention!")
             st.dataframe(high_df.head(10))
         else:
-            st.success("No high-risk customers")
+            st.success("No high-risk customers 🎉")
 
         # -------- DASHBOARD --------
         st.subheader("📊 Visual Insights")
@@ -144,7 +157,7 @@ if uploaded_file is not None:
 
         with col2:
             fig2 = px.histogram(filtered_df, x='Churn_Probability',
-                                title="Probability Distribution")
+                                title="Churn Probability (%)")
             st.plotly_chart(fig2, use_container_width=True)
 
         col3, col4 = st.columns(2)
@@ -163,12 +176,12 @@ if uploaded_file is not None:
                                   x='MonthlyCharges',
                                   y='Churn_Probability',
                                   color='Risk_Level',
-                                  title="Charges vs Risk")
+                                  title="Charges vs Churn %")
                 st.plotly_chart(fig4, use_container_width=True)
 
         # -------- DOWNLOAD --------
         csv = filtered_df.to_csv(index=False).encode('utf-8')
-        st.download_button("📥 Download Filtered Results", csv, "filtered_results.csv", "text/csv")
+        st.download_button("📥 Download Results", csv, "results.csv", "text/csv")
 
     except Exception as e:
         st.error(f"Error: {e}")
