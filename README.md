@@ -90,26 +90,17 @@ subscription-retention-system/
 
 1. Clone Repository
 
+https://github.com/AanchalChauhan-356/subscription-retention-system
 
-git clone https://github.com/your-username/subscription-retention-system.git
-cd subscription-retention-system
+2. Install Dependencies
 
-
-### 2. Install Dependencies
-
-```
 pip install -r requirements.txt
-```
 
-### 3. Run Application
+3. Run Application
 
-```
-streamlit run app.py
-```
+https://subscription-retention-system-kdbxrokufh6diw4wmyf5zu.streamlit.app/
 
----
-
-## 🌐 Deployment
+ 🌐 Deployment
 
 The application is deployed using Streamlit Cloud.
 
@@ -144,7 +135,10 @@ Email/SMS automation for retention
 
  👨‍💻 Author
 
-Developed as part of a data science project to demonstrate **end-to-end ML deployment with business insights**.
+Developed as part of a data science project to demonstrate end-to-end ML deployment with business insights.
+Name : Aanchal Chauhan 
+Course : BCA 4A AIML
+University : SGT University 
 
 ⭐ Conclusion
 
