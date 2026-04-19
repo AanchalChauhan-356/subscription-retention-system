@@ -2,6 +2,7 @@ import streamlit as st
 import pickle
 import pandas as pd
 import os
+import matplotlib.pyplot as plt
 
 # Load model files
 model_path = os.path.join(os.path.dirname(__file__), "model.pkl")
@@ -16,7 +17,6 @@ st.title("📊 Subscription Retention Intelligence System")
 
 st.write("Upload customer data (CSV) to predict churn risk")
 
-# Upload file
 uploaded_file = st.file_uploader("Upload CSV File", type=["csv"])
 
 if uploaded_file is not None:
@@ -26,33 +26,26 @@ if uploaded_file is not None:
     st.dataframe(df.head())
 
     try:
-        # PREPROCESS SAME AS TRAINING
+        # Preprocessing
         df['TotalCharges'] = pd.to_numeric(df['TotalCharges'], errors='coerce')
         df['TotalCharges'] = df['TotalCharges'].fillna(df['TotalCharges'].median())
 
         if 'customerID' in df.columns:
             df.drop('customerID', axis=1, inplace=True)
 
-        # Convert target if exists
         if 'Churn' in df.columns:
             df.drop('Churn', axis=1, inplace=True)
 
-        # One-hot encoding
         df = pd.get_dummies(df)
-
-        # Align columns with training
         df = df.reindex(columns=columns, fill_value=0)
 
-        # Scale
         scaled_data = scaler.transform(df)
 
-        # Predict
+        # Prediction
         probs = model.predict_proba(scaled_data)[:, 1]
-
-        # Add results
         df['Churn_Probability'] = probs
 
-        # Risk categories
+        # Risk Levels
         def risk(p):
             if p < 0.3:
                 return "Low"
@@ -77,6 +70,34 @@ if uploaded_file is not None:
         st.write("### ✅ Predictions")
         st.dataframe(df)
 
+        # 📊 DASHBOARD VISUALS
+
+        st.write("## 📊 Dashboard")
+
+        # 1️⃣ Risk Distribution
+        st.write("### Risk Category Distribution")
+        risk_counts = df['Risk_Level'].value_counts()
+
+        fig1, ax1 = plt.subplots()
+        ax1.pie(risk_counts, labels=risk_counts.index, autopct='%1.1f%%')
+        st.pyplot(fig1)
+
+        # 2️⃣ Probability Histogram
+        st.write("### Churn Probability Distribution")
+        fig2, ax2 = plt.subplots()
+        ax2.hist(df['Churn_Probability'], bins=20)
+        ax2.set_xlabel("Churn Probability")
+        ax2.set_ylabel("Number of Customers")
+        st.pyplot(fig2)
+
+        # 3️⃣ Risk Count Bar Chart
+        st.write("### Risk Level Count")
+        fig3, ax3 = plt.subplots()
+        risk_counts.plot(kind='bar', ax=ax3)
+        ax3.set_xlabel("Risk Level")
+        ax3.set_ylabel("Count")
+        st.pyplot(fig3)
+
         # Download results
         csv = df.to_csv(index=False).encode('utf-8')
         st.download_button(
@@ -87,4 +108,4 @@ if uploaded_file is not None:
         )
 
     except Exception as e:
-        st.error(f"Error processing file: {e}")
+        st.error(f"Error: {e}")
