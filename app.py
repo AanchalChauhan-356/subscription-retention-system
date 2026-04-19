@@ -61,25 +61,27 @@ if uploaded_file is not None:
 
         df['Risk_Level'] = df['Churn_Probability'].apply(risk)
 
+        # Emoji labels
+        def risk_label(r):
+            if r == "Low":
+                return "🟢 Low"
+            elif r == "Medium":
+                return "🟡 Medium"
+            else:
+                return "🔴 High"
+
+        df['Risk_Display'] = df['Risk_Level'].apply(risk_label)
+
         # Recommendations
         def advice(r):
             if r == "Low":
-                return "✅ Maintain engagement"
+                return "Maintain engagement"
             elif r == "Medium":
-                return "⚠️ Offer targeted promotions"
+                return "Offer targeted promotions"
             else:
-                return "🚨 Immediate retention action"
+                return "Immediate retention action required"
 
         df['Recommendation'] = df['Risk_Level'].apply(advice)
-
-        # -------- COLOR FUNCTION --------
-        def color_risk(val):
-            if val == "Low":
-                return "background-color: #d4edda; color: black"   # green
-            elif val == "Medium":
-                return "background-color: #fff3cd; color: black"   # yellow
-            else:
-                return "background-color: #f8d7da; color: black"   # red
 
         # -------- FILTERS --------
         st.sidebar.header("🔍 Filters")
@@ -130,9 +132,8 @@ if uploaded_file is not None:
         # -------- TABLE --------
         st.subheader("📋 Filtered Results")
 
-        st.dataframe(
-            filtered_df.style.applymap(color_risk, subset=['Risk_Level'])
-        )
+        display_df = filtered_df.drop(columns=['Risk_Level'])
+        st.dataframe(display_df)
 
         # -------- HIGH RISK --------
         st.subheader("🚨 High Risk Customers")
@@ -151,7 +152,7 @@ if uploaded_file is not None:
         col1, col2 = st.columns(2)
 
         with col1:
-            fig1 = px.pie(filtered_df, names='Risk_Level', hole=0.5,
+            fig1 = px.pie(filtered_df, names='Risk_Display', hole=0.5,
                           title="Risk Distribution")
             st.plotly_chart(fig1, use_container_width=True)
 
@@ -163,7 +164,7 @@ if uploaded_file is not None:
         col3, col4 = st.columns(2)
 
         with col3:
-            risk_counts = filtered_df['Risk_Level'].value_counts().reset_index()
+            risk_counts = filtered_df['Risk_Display'].value_counts().reset_index()
             risk_counts.columns = ['Risk_Level', 'Count']
 
             fig3 = px.bar(risk_counts, x='Risk_Level', y='Count',
@@ -175,7 +176,7 @@ if uploaded_file is not None:
                 fig4 = px.scatter(filtered_df,
                                   x='MonthlyCharges',
                                   y='Churn_Probability',
-                                  color='Risk_Level',
+                                  color='Risk_Display',
                                   title="Charges vs Churn %")
                 st.plotly_chart(fig4, use_container_width=True)
 
