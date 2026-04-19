@@ -27,97 +27,77 @@ if uploaded_file is not None:
     st.dataframe(df.head())
 
     try:
-        # Preprocessing
-        df['TotalCharges'] = pd.to_numeric(df['TotalCharges'], errors='coerce')
-        df['TotalCharges'] = df['TotalCharges'].fillna(df['TotalCharges'].median())
+    import plotly.express as px
 
-        if 'customerID' in df.columns:
-            df.drop('customerID', axis=1, inplace=True)
+    # Preprocessing
+    df['TotalCharges'] = pd.to_numeric(df['TotalCharges'], errors='coerce')
+    df['TotalCharges'] = df['TotalCharges'].fillna(df['TotalCharges'].median())
 
-        if 'Churn' in df.columns:
-            df.drop('Churn', axis=1, inplace=True)
+    if 'customerID' in df.columns:
+        df.drop('customerID', axis=1, inplace=True)
 
-        df = pd.get_dummies(df)
-        df = df.reindex(columns=columns, fill_value=0)
+    if 'Churn' in df.columns:
+        df.drop('Churn', axis=1, inplace=True)
 
-        scaled_data = scaler.transform(df)
+    df = pd.get_dummies(df)
+    df = df.reindex(columns=columns, fill_value=0)
 
-        # Prediction
-        probs = model.predict_proba(scaled_data)[:, 1]
-        df['Churn_Probability'] = probs
+    scaled_data = scaler.transform(df)
 
-        # Risk Levels
-        def risk(p):
-            if p < 0.3:
-                return "Low"
-            elif p < 0.7:
-                return "Medium"
-            else:
-                return "High"
+    # Prediction
+    probs = model.predict_proba(scaled_data)[:, 1]
+    df['Churn_Probability'] = probs
 
-        df['Risk_Level'] = df['Churn_Probability'].apply(risk)
+    def risk(p):
+        if p < 0.3:
+            return "Low"
+        elif p < 0.7:
+            return "Medium"
+        else:
+            return "High"
 
-        # Recommendations
-        def advice(r):
-            if r == "Low":
-                return "Maintain satisfaction"
-            elif r == "Medium":
-                return "Engage with offers"
-            else:
-                return "Give discounts / retention plan"
+    df['Risk_Level'] = df['Churn_Probability'].apply(risk)
 
-        df['Recommendation'] = df['Risk_Level'].apply(advice)
+    def advice(r):
+        if r == "Low":
+            return "Maintain satisfaction"
+        elif r == "Medium":
+            return "Engage with offers"
+        else:
+            return "Give discounts / retention plan"
 
-        st.write("### ✅ Predictions")
-        st.dataframe(df)
+    df['Recommendation'] = df['Risk_Level'].apply(advice)
 
-        # 📊 DASHBOARD VISUALS
+    st.write("### ✅ Predictions")
+    st.dataframe(df)
 
-        st.write("## 📊 Dashboard")
+    # ================= DASHBOARD =================
 
+    st.write("## 📊 Dashboard")
 
-# 1️⃣ Risk Distribution (Donut Chart)
-st.write("### 🎯 Risk Distribution")
-fig1 = px.pie(
-    df,
-    names='Risk_Level',
-    title="Customer Risk Segmentation",
-    hole=0.5
-)
-st.plotly_chart(fig1, use_container_width=True)
+    # Donut chart
+    st.write("### 🎯 Risk Distribution")
+    fig1 = px.pie(df, names='Risk_Level', hole=0.5)
+    st.plotly_chart(fig1, use_container_width=True)
 
-# 2️⃣ Probability Histogram (Styled)
-st.write("### 📈 Churn Probability Distribution")
-fig2 = px.histogram(
-    df,
-    x='Churn_Probability',
-    nbins=30,
-    title="Churn Probability Spread",
-)
-st.plotly_chart(fig2, use_container_width=True)
+    # Histogram
+    st.write("### 📈 Churn Probability Distribution")
+    fig2 = px.histogram(df, x='Churn_Probability', nbins=30)
+    st.plotly_chart(fig2, use_container_width=True)
 
-# 3️⃣ Risk Count Bar Chart (Colorful)
-st.write("### 📊 Risk Level Count")
-fig3 = px.bar(
-    df['Risk_Level'].value_counts().reset_index(),
-    x='Risk_Level',
-    y='count',
-    color='Risk_Level',
-    title="Number of Customers by Risk Level"
-)
-st.plotly_chart(fig3, use_container_width=True)
+    # Bar chart
+    st.write("### 📊 Risk Count")
+    risk_counts = df['Risk_Level'].value_counts().reset_index()
+    risk_counts.columns = ['Risk_Level', 'Count']
 
-# 4️⃣ Charges vs Probability (Insightful)
-st.write("### 💡 Monthly Charges vs Churn Probability")
-if 'MonthlyCharges' in df.columns:
-    fig4 = px.scatter(
-        df,
-        x='MonthlyCharges',
-        y='Churn_Probability',
-        color='Risk_Level',
-        title="Charges vs Churn Risk"
-    )
-    st.plotly_chart(fig4, use_container_width=True)
+    fig3 = px.bar(risk_counts, x='Risk_Level', y='Count', color='Risk_Level')
+    st.plotly_chart(fig3, use_container_width=True)
 
-    except Exception as e:
-        st.error(f"Error: {e}")
+    # Scatter
+    if 'MonthlyCharges' in df.columns:
+        st.write("### 💡 Charges vs Churn Risk")
+        fig4 = px.scatter(df, x='MonthlyCharges', y='Churn_Probability', color='Risk_Level')
+        st.plotly_chart(fig4, use_container_width=True)
+
+except Exception as e:
+    st.error(f"Error: {e}")
