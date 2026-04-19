@@ -40,4 +40,4 @@ if st.button("Predict"):
 
     st.success(f"Churn Probability: {prob:.2f}")
     st.success(f"Risk Level: {risk}")
-    st.info(f"Recommendation: {advice}")S
+    st.info(f"Recommendation: {advice}")
