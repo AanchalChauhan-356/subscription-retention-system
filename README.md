@@ -82,6 +82,7 @@ Model: Logistic Regression
 
 
 subscription-retention-system/
+
 │
 ├── app.py              # Main Streamlit application
 
