@@ -3,6 +3,7 @@ import pickle
 import pandas as pd
 import os
 import matplotlib.pyplot as plt
+import plotly.express as px
 
 # Load model files
 model_path = os.path.join(os.path.dirname(__file__), "model.pkl")
@@ -74,38 +75,49 @@ if uploaded_file is not None:
 
         st.write("## 📊 Dashboard")
 
-        # 1️⃣ Risk Distribution
-        st.write("### Risk Category Distribution")
-        risk_counts = df['Risk_Level'].value_counts()
 
-        fig1, ax1 = plt.subplots()
-        ax1.pie(risk_counts, labels=risk_counts.index, autopct='%1.1f%%')
-        st.pyplot(fig1)
+# 1️⃣ Risk Distribution (Donut Chart)
+st.write("### 🎯 Risk Distribution")
+fig1 = px.pie(
+    df,
+    names='Risk_Level',
+    title="Customer Risk Segmentation",
+    hole=0.5
+)
+st.plotly_chart(fig1, use_container_width=True)
 
-        # 2️⃣ Probability Histogram
-        st.write("### Churn Probability Distribution")
-        fig2, ax2 = plt.subplots()
-        ax2.hist(df['Churn_Probability'], bins=20)
-        ax2.set_xlabel("Churn Probability")
-        ax2.set_ylabel("Number of Customers")
-        st.pyplot(fig2)
+# 2️⃣ Probability Histogram (Styled)
+st.write("### 📈 Churn Probability Distribution")
+fig2 = px.histogram(
+    df,
+    x='Churn_Probability',
+    nbins=30,
+    title="Churn Probability Spread",
+)
+st.plotly_chart(fig2, use_container_width=True)
 
-        # 3️⃣ Risk Count Bar Chart
-        st.write("### Risk Level Count")
-        fig3, ax3 = plt.subplots()
-        risk_counts.plot(kind='bar', ax=ax3)
-        ax3.set_xlabel("Risk Level")
-        ax3.set_ylabel("Count")
-        st.pyplot(fig3)
+# 3️⃣ Risk Count Bar Chart (Colorful)
+st.write("### 📊 Risk Level Count")
+fig3 = px.bar(
+    df['Risk_Level'].value_counts().reset_index(),
+    x='Risk_Level',
+    y='count',
+    color='Risk_Level',
+    title="Number of Customers by Risk Level"
+)
+st.plotly_chart(fig3, use_container_width=True)
 
-        # Download results
-        csv = df.to_csv(index=False).encode('utf-8')
-        st.download_button(
-            "📥 Download Results",
-            csv,
-            "predictions.csv",
-            "text/csv"
-        )
+# 4️⃣ Charges vs Probability (Insightful)
+st.write("### 💡 Monthly Charges vs Churn Probability")
+if 'MonthlyCharges' in df.columns:
+    fig4 = px.scatter(
+        df,
+        x='MonthlyCharges',
+        y='Churn_Probability',
+        color='Risk_Level',
+        title="Charges vs Churn Risk"
+    )
+    st.plotly_chart(fig4, use_container_width=True)
 
     except Exception as e:
         st.error(f"Error: {e}")
