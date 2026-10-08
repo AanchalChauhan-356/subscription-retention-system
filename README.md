@@ -130,6 +130,8 @@ The application is deployed using Streamlit Cloud.
 📊 Dataset
 
 IBM Telco Customer Churn Dataset (Kaggle)
+link - https://www.kaggle.com/datasets/blastchar/telco-customer-churn?select=WA_Fn-UseC_-Telco-Customer-Churn.csv
+
 
 🧪 Model Details
 
