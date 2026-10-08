@@ -2,8 +2,6 @@
 
 🌐 **Live Demo:** https://subscription-retention-system-kdbxrokufh6diw4wmyf5zu.streamlit.app/
 
-![Dashboard screenshot](screenshot.png)
-
 ## 📌 Overview
 
 A machine learning web app that predicts which customers are likely to churn, groups them into Low, Medium and High risk, and suggests a retention action for each group. It is built for business users: upload a CSV, get predictions and insights instantly, with no code needed.
